@@ -19,23 +19,23 @@ Submission Timestamp
 Username
 This data allows you to analyze user performance in terms of correct and incorrect submissions, total points earned, and daily/weekly activity.
 
-Q1. List All Distinct Users and Their Stats
+###Q1. List All Distinct Users and Their Stats
 Description: Return the user name, total submissions, and total points earned by each user.
 Expected Output: A list of users with their submission count and total points.
 
 QUERY:
-SELECT username,
+'''SELECT username,
        SUM(POINTS) AS total_points,
 	   COUNT(SUBMITTED_AT) AS total_submissions 
 FROM PROJECT
 GROUP BY username
 ORDER BY total_points DESC; 
 
-Q2. Calculate the Daily Average Points for Each User
+###Q2. Calculate the Daily Average Points for Each User
 Description: For each day, calculate the average points earned by each user.
 Expected Output: A report showing the average points per user for each day.
 
-QUERY:
+'''QUERY:
 WITH DAILY_AVGG AS (SELECT username,
        DATENAME(DAY,submitted_at) AS DAY,
        AVG(POINTS) AS AVG_POINTS
