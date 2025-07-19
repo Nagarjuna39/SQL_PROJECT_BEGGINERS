@@ -1,19 +1,65 @@
-﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
-# SQL Server Management Studio Solution File, Format Version 20.00
-VisualStudioVersion = 15.0.28307.421
-MinimumVisualStudioVersion = 10.0.40219.1
-Global
-	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Default|Default = Default|Default
-	EndGlobalSection
-	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{838C41BF-25EF-4059-9BF2-1E8F8D1C053E}.Default|Default.ActiveCfg = Default
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {40E07CBD-AC22-4C53-BA9D-347F008A1419}
-	EndGlobalSection
-EndGlobal
+---Q1. List All Distinct Users and Their Stats
+---Description: Return the user name, total submissions, and total points earned by each user.
+---Expected Output: A list of users with their submission count and total points.
+
+SELECT username,
+       SUM(POINTS) AS total_points,
+	   COUNT(SUBMITTED_AT) AS total_submissions 
+FROM PROJECT
+GROUP BY username
+ORDER BY total_points DESC; 
+
+---Q2. Calculate the Daily Average Points for Each User
+---Description: For each day, calculate the average points earned by each user.
+---Expected Output: A report showing the average points per user for each day
+
+WITH DAILY_AVGG AS (SELECT username,
+       DATENAME(DAY,submitted_at) AS DAY,
+       AVG(POINTS) AS AVG_POINTS
+FROM PROJECT
+GROUP BY DATENAME(DAY,submitted_at),username)
+
+SELECT * FROM DAILY_AVGG
+ORDER BY DAY,AVG_POINTS DESC;
+
+---Q3. Find the Top 3 Users with the Most Correct Submissions for Each Day
+---Description: Identify the top 3 users with the most correct submissions for each day.
+---Expected Output: A list of users and their correct submissions, ranked daily.
+ 
+WITH RANK_POINT AS(SELECT  DATENAME(DAY,submitted_at)AS DAY,
+                           username,
+						   question_id,
+		                   POINTS,
+		                   DENSE_RANK() OVER(PARTITION BY USERNAME ORDER BY POINTS DESC) AS RANK_POINTS
+                           FROM PROJECT)
+SELECT * FROM RANK_POINT
+WHERE RANK_POINTS<4;
+
+---Q4. Find the Top 5 Users with the Highest Number of Incorrect Submissions
+---Description: Identify the top 5 users with the highest number of incorrect submissions.
+---Expected Output: A list of users with the count of incorrect submissions.
+
+SELECT TOP 5 username,
+             SUM(POINTS) AS incorrect_submissions 
+FROM PROJECT
+WHERE points<0
+GROUP BY username
+ORDER BY SUM(POINTS) ASC
+
+---Q5. Find the Top 10 Performers for Each Week
+---Description: Identify the top 10 users with the highest total points earned each week.
+--Expected Output: A report showing the top 10 users ranked by total points per week.
+
+WITH top10_sales AS(SELECT  username,
+                            DATENAME(WEEK,submitted_at) as week,
+							SUM(points) as tatal_week_wise_points 
+					FROM PROJECT
+GROUP BY DATENAME(WEEK,submitted_at),username),
+
+sales AS (SELECT *,row_number() OVER(PARTITION BY week ORDER BY tatal_week_wise_points DESC ) AS rankk 
+FROM top10_sales)
+
+SELECT * FROM sales
+WHERE rankk<9
+ORDER BY week DESC,tatal_week_wise_points DESC;
+
